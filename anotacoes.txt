@@ -1,0 +1,14 @@
+"""A função de um framework web é retornar a estrutura de dados em um site web"""
+"""para ativar o ambiente virtual com o poetry utiliza-se 
+poetry shell # ativa o venv"""
+
+"""a url que a função será rodada é determinada aqui, no caso apenas '/' seria a raiz do projeto,
+o fastapi oferece por padrão a porta http://127.0.0.1:8000 para desenvolvimento
+http://127.0.0.1:8000/ seria a raiz, se o @app.get receber @app.get('/olamundo') seria o endereco
+http://127.0.0.1:8000/olamundo"""
+
+"""O fastapi tem um documentação dinamica (não tão boa de ler) que pode ser acessada através do servidor /docs
+http://127.0.0.1:8000/docs"""
+
+"""também existe o redoc que é possível ver os endpoinds e suas respostas mais detalhadas"""
+

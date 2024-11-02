@@ -1,0 +1,3 @@
+Ruff
+Linter - um análisador estático de código, verifica se estão sendo usadas as boas práticas de formatação do código
+Formatter - formata e tenta colocar no padrão correto das coisas que o linter identificou
