@@ -29,6 +29,7 @@ extend-exclude = ['migrations']
 preview = true
 select = ['I','F', 'E', 'W', 'PL', 'PT']
 
+#definindo variaveis para atalho utilizando o comando task seguido do atalho
 [tool.taskipy.tasks]
 run = 'fastapi dev fast_zero/app.py' #comando para rodar o servidor do fastapi
 pre_test = 'task lint'
