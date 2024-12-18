@@ -2,6 +2,19 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
 database.db
+# Ignorar arquivos compilados do Python
+*.pyc
+__pycache__/
+
+# Ignorar cobertura de testes
+.coverage
+
+# Ignorar arquivos de log e temporários
+*.log
+
+# Ignorar arquivos do sistema
+.DS_Store
+Thumbs.db
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

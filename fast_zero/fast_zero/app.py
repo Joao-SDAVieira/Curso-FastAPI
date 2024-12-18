@@ -1,8 +1,12 @@
 from http import HTTPStatus
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-from fast_zero.schemas import Message, UserDB, UserList, UserPublic, UserSchema
+from fast_zero.database import get_session
+from fast_zero.models import User
+from fast_zero.schemas import Message, UserList, UserPublic, UserSchema
 
 app = FastAPI(docs_url="/docs", redoc_url="/redoc")
 
@@ -15,45 +19,71 @@ def read_root():
 
 
 @app.post("/users/", status_code=HTTPStatus.CREATED, response_model=UserPublic)
-def create_user(user: UserSchema):  # dessa forma, o retorno é o model
-    # UserSchema,sendo mais seguro
-    # 'user' é o user do pydantic
-    user_with_id = UserDB(
-        id=len(database) + 1,
-        **user.model_dump(),  # model_dump() transforma os atributos do obj em
-        # dicionário, que é passado como kwargs para user_with_id
+def create_user(user: UserSchema, session=Depends(get_session)):
+    # dessa forma, o retorno é o responsemodel
+    db_user = session.scalar(
+        select(User).where(
+            (User.username == user.username) | (User.email == user.email)
+        )
     )
-    database.append(user_with_id)
-    return user_with_id
+    if db_user:
+        if db_user.username == user.username:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail="Username already exists",
+            )
+        if db_user.email == user.username:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail="Email already exists",
+            )
+    db_user = User(
+        username=user.username, email=user.email, password=user.password
+    )
+    session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
+    return db_user
 
 
 @app.get("/users/", response_model=UserList)
-def read_users():
-    return {"users": database}
+def read_users(
+    limit: int = 10, skip: int = 0, session: Session = Depends(get_session)
+):
+    users = session.scalars(select(User).limit(limit).offset(skip))
+    return {"users": users}
 
 
 @app.put("/users/{user_id}", response_model=UserPublic)
 # o id do usuário a ser deletado passando por variável
-def update_user(user_id: int, user: UserSchema):  # os parametros da função
+def update_user(
+    user_id: int, user: UserSchema, session: Session = Depends(get_session)
+):
+    # os parametros da função
     # são os parametros da api
-    if user_id < 1 or user_id > len(database):
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail="User not found"
-        )
-        # raise/ergue uma excessão para caso insira um idx invalido
+    db_user = session.scalar(select(User).where(User.id == user_id))
 
-    user_with_id = UserDB(id=user_id, **user.model_dump())
-    database[user_id - 1] = user_with_id  # substituindo o dicionário presente
-    # no indice especifico da lista database
-    return user_with_id  # é renderizado o user com id (sem a senha)
+    if not db_user:
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail="User not found")
+
+    db_user.email = user.email
+    db_user.username = user.username
+    db_user.password = user.password
+
+    session.commit()
+    session.refresh(db_user)
+    return db_user
 
 
 @app.delete("/users/{user_id}", response_model=Message)
-def delete_user(user_id: int):
-    if user_id < 1 or user_id > len(database):
+def delete_user(user_id: int, session: Session = Depends(get_session)):
+    db_user = session.scalar(select(User).where(User.id == user_id))
+
+    if not db_user:
         raise HTTPException(HTTPStatus.NOT_FOUND, detail="User not found")
 
-    del database[user_id - 1]  # mesma coisa que .pop()
+    session.delete(db_user)
+    session.commit
     return {"message": "User deleted"}  # return == response
 
 
