@@ -32,6 +32,30 @@ def test_create_user(client):
     }
 
 
+def test_create_user_user_exist(client, user):
+    response = client.post(
+        "/users/",
+        json={
+            "username": user.username,
+            "email": "email@emaill.com",
+            "password": "senha_teste",
+        },
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
+def test_create_user_email_exist(client, user):
+    response = client.post(
+        "/users/",
+        json={
+            "username": "Joao",
+            "email": user.email,
+            "password": "senha_teste",
+        },
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+
+
 # esse teste possui uma falha, pois precisa que o teste acima execute primeiro
 def test_read_users(client):
     response = client.get("/users/")
@@ -48,24 +72,20 @@ def test_read_users_with_user(client, user):
     assert response.json() == {"users": [user_schema]}
 
 
-def test_get_single_user(client):
-    response = client.get("/users/1")
+def test_get_single_user(client, user):
+    url = "/users/" + str(user.id)
+    response = client.get(url)
     assert response.json() == {
-        "username": "testeusername",
-        "email": "test@test.com",
-        "id": 1,
+        "username": user.username,
+        "email": user.email,
+        "id": user.id,
     }
     assert response.status_code == HTTPStatus.OK
 
-    def response_error_test(id):
-        response_error = client.get(f"/users/{id}")
-        return response_error
 
-    response_error = response_error_test("2")
-    assert response_error.status_code == HTTPStatus.NOT_FOUND
-
-    response_error = response_error_test("0")
-    assert response_error.status_code == HTTPStatus.NOT_FOUND
+def test_get_single_user_not_found(client, user):
+    response = client.get("/users/2")
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_update_user(client, user):

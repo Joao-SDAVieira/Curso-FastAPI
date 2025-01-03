@@ -32,7 +32,7 @@ def create_user(user: UserSchema, session=Depends(get_session)):
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail="Username already exists",
             )
-        if db_user.email == user.username:
+        if db_user.email == user.email:
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail="Email already exists",
@@ -88,9 +88,9 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
 
 
 @app.get("/users/{user_id}", response_model=UserPublic)
-def get_single_user(user_id: int):
-    if user_id < 1 or user_id > len(database):
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail="User not found"
-        )
-    return database[user_id - 1]
+def get_single_user(user_id: int, session: Session = Depends(get_session)):
+    user = session.scalar(select(User).where(User.id == user_id))
+    if not user:
+        raise HTTPException(HTTPStatus.NOT_FOUND, detail="User not found")
+
+    return user
