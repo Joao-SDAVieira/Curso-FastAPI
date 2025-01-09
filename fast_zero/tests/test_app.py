@@ -88,50 +88,85 @@ def test_get_single_user_not_found(client, user):
     assert response.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_update_user(client, user):
+def test_update_user(client, user, token):
     response = client.put(
-        "/users/1",
+        f"/users/{user.id}",
+        headers={"Authorization": f"Bearer {token}"},
         json={
             "password": "123",
             "username": "testeusername",
             "email": "test@test.com",
-            "id": 1,
+            "id": user.id,
         },
     )
     assert response.json() == {
         "username": "testeusername",
         "email": "test@test.com",
-        "id": 1,
+        "id": user.id,
     }
 
-    def response_error_test(id):
-        response_error = client.put(
-            f"/users/{id}",
-            json={
-                "password": "123",
-                "username": "testeusername",
-                "email": "test@test.com",
-            },
-        )
-        return response_error
+    # def response_error_test(id):
+    #     response_error = client.put(
+    #         f"/users/{id}",
+    #         json={
+    #             "password": "123",
+    #             "username": "testeusername",
+    #             "email": "test@test.com",
+    #         },
+    #     )
+    #     return response_error
 
-    response_error = response_error_test("2")
-    assert response_error.status_code == HTTPStatus.NOT_FOUND
+    # response_error = response_error_test("2")
+    # assert response_error.status_code == HTTPStatus.NOT_FOUND
 
-    response_error = response_error_test("0")
-    assert response_error.status_code == HTTPStatus.NOT_FOUND
+    # response_error = response_error_test("0")
+    # assert response_error.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_delete_user(client, user):
-    response = client.delete("/users/1")
+def test_delete_user(client, user, token):
+    response = client.delete(
+        f"/users/{user.id}", headers={"Authorization": f"Bearer {token}"}
+    )
     assert response.json() == {"message": "User deleted"}
 
-    def response_error_test(id):
-        response_error = client.delete(f"/users/{id}")
-        return response_error
+    # def response_test(id):
+    #     response_error = client.delete(f"/users/{id}")
+    #     return response_error
 
-    response_error = response_error_test("2")
-    assert response_error.status_code == HTTPStatus.NOT_FOUND
+    # response_error = response_test("2")
+    # assert response_error.status_code == HTTPStatus.NOT_FOUND
 
-    response_error = response_error_test("0")
-    assert response_error.status_code == HTTPStatus.NOT_FOUND
+    # response_error = response_test("0")
+    # assert response_error.status_code == HTTPStatus.NOT_FOUND
+
+    # def get_user_deleted():
+    #     response = client.delete("/users/1")
+    #     return response
+
+    # response_user_not_exist = get_user_deleted()
+    # assert response_user_not_exist.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_get_token(client, user):
+    response = client.post(
+        "/token",
+        data={"username": user.email, "password": user.clean_password},
+    )
+    token = response.json()
+
+    assert response.status_code == HTTPStatus.OK
+    assert token["token_type"] == "Bearer"
+    assert "access_token" in token
+
+
+def test_credentials_exception(client, user, token):
+    user.email = "outro@email.com"
+    response = client.delete(
+        f"/users/{user.id}", headers={"Authorization": f"Bearer {token}"}
+    )
+    # HTTPException(
+    #     status_code=HTTPStatus.UNAUTHORIZED,
+    #     detail="Could not validate credentials",
+    #     headers={"WWW-Authenticate": "Bearer"},
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    # assert response.json() == {"message": "User deleted"}

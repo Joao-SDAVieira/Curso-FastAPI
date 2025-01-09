@@ -5,7 +5,7 @@ database.db
 # Ignorar arquivos compilados do Python
 *.pyc
 __pycache__/
-
+install-pyenv-win.ps1
 # Ignorar cobertura de testes
 .coverage
 
