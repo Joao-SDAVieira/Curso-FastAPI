@@ -105,22 +105,17 @@ def test_update_user(client, user, token):
         "id": user.id,
     }
 
-    # def response_error_test(id):
-    #     response_error = client.put(
-    #         f"/users/{id}",
-    #         json={
-    #             "password": "123",
-    #             "username": "testeusername",
-    #             "email": "test@test.com",
-    #         },
-    #     )
-    #     return response_error
 
-    # response_error = response_error_test("2")
-    # assert response_error.status_code == HTTPStatus.NOT_FOUND
-
-    # response_error = response_error_test("0")
-    # assert response_error.status_code == HTTPStatus.NOT_FOUND
+def test_update_user_return_enough_permissions(client, user, token):
+    response = client.put("/users/2",
+                          headers={"Authorization": f"Bearer {token}"},
+                          json={
+            "password": "123",
+            "username": "testeusername",
+            "email": "test@test.com",
+            "id": "2",
+        },)
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_delete_user(client, user, token):
@@ -145,6 +140,13 @@ def test_delete_user(client, user, token):
 
     # response_user_not_exist = get_user_deleted()
     # assert response_user_not_exist.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_delete_user_return_enough_permissions(client, user, token):
+    response = client.delete(
+        "/users/2",
+        headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_get_token(client, user):

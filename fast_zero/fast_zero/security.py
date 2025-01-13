@@ -59,7 +59,6 @@ def get_current_user(
         print(payload)
         username = payload.get("sub")
         if not username:
-            print("primeiro if")
             raise credentials_exception
     except PyJWTError as exe:
         print("segundo if", exe)
